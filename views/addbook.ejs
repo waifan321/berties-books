@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- views/addbook.ejs - Form to add a new book to the database
+     Submits to POST /books/bookadded with fields: name, price
+-->
+<html>
+  <head>
+    <title>Add a book - <%= shopData.shopName %></title>
+    <link rel="stylesheet"  type="text/css" href="/main.css" />
+  </head>
+  <body>
+    <h1>Add a book to <%= shopData.shopName %></h1>
+    <form method="POST" action="bookadded">
+      <p>Book name: <input id="name" type="text" name="name" required /></p>
+      <p>Price: <input id="price" type="number" name="price" step="0.01" required /></p>
+      <input type="submit" value="Add Book" />
+    </form>
+    <p><a href="/books/list">View all books</a> | <a href="/">Home</a></p>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- views/bookadded.ejs - Confirmation page shown after a book is saved
+     Variables provided by router: name, price
+-->
+<html>
+  <head>
+    <title>Book added - <%= shopData.shopName %></title>
+    <link rel="stylesheet"  type="text/css" href="/main.css" />
+  </head>
+  <body>
+    <h1>Book added</h1>
+    <p>This book is added to the database.</p>
+    <p><strong>Title:</strong> <%= name %></p>
+    <p><strong>Price:</strong> £<%= (typeof price === 'number') ? price.toFixed(2) : parseFloat(price).toFixed(2) %></p>
+    <p><a href="/books/list">View all books</a> | <a href="/books/addbook">Add another</a> | <a href="/">Home</a></p>
+  </body>
+</html>
