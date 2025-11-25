@@ -4,6 +4,7 @@ var express = require ('express')
 var ejs = require('ejs')
 var mysql = require('mysql2');
 const path = require('path')
+var session = require ('express-session')
 // Load environment variables from .env (if present)
 require('dotenv').config()
 
@@ -27,6 +28,16 @@ const db = mysql.createPool({
 });
 // Expose the pool as a global so route modules can access it via `db`.
 global.db = db;
+
+// Create a session
+app.use(session({
+    secret: 'somerandomstuff',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000
+    }
+}))
 
 // Parse URL-encoded request bodies (forms)
 app.use(express.urlencoded({ extended: true }))

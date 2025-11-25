@@ -3,6 +3,16 @@ const express = require("express")
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const saltRounds = 10
+const { check, validationResult } = require('express-validator');
+
+
+const redirectLogin = (req, res, next) => {
+    if (!req.session.userId ) {
+      res.redirect('./login') // redirect to the login page
+    } else { 
+        next (); // move to the next middleware function
+    } 
+}
 
 
 // Display the registration form
@@ -13,7 +23,12 @@ router.get('/register', function (req, res, next) {
 // Handle registration form submission
 // (Currently this example just returns a confirmation message rather than
 // inserting into a database.)
-router.post('/registered', function (req, res, next) {
+router.post('/registered', [check('email').isEmail(), check('username').isLength({ min: 5, max: 20})], function (req, res, next) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.render('./register')
+    } else {
+
     const plainPassword = req.body.password
 
     bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) {
@@ -32,18 +47,17 @@ router.post('/registered', function (req, res, next) {
         res.send(resultMsg)
       })
     })
-}); 
+}}); 
 
 
 // List all users (no passwords) - mounted at /users/list from index.js
-router.get('/list', function(req, res, next) {
+router.get('/list', redirectLogin, function(req, res, next) {
   const sql = 'SELECT id, username, first_name, last_name, email FROM users'
   db.query(sql, (err, results) => {
     if (err) return next(err)
     res.render('users_list.ejs', { users: results })
   })
 })
-
 // Display the login form
 router.get('/login', function(req, res, next) {
   res.render('login.ejs')
