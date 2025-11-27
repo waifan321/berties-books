@@ -2,6 +2,14 @@
 const express = require("express")
 const router = express.Router()
 
+// Middleware to require a logged-in session
+const redirectLogin = (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+        return res.redirect('/users/login')
+    }
+    next()
+}
+
 // Home page route - renders `views/index.ejs`
 router.get('/',function(req, res, next){
     res.render('index.ejs')
@@ -13,13 +21,13 @@ router.get('/about',function(req, res, next){
 });
 
 router.get('/logout', redirectLogin, (req,res) => {
-        req.session.destroy(err => {
-        if (err) {
-          return res.redirect('./')
-        }
-        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+                req.session.destroy(err => {
+                if (err) {
+                    return res.redirect('./')
+                }
+                res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+                })
         })
-    })
 
 
 // POST handler used to insert a new book record into the database.

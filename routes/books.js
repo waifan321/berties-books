@@ -2,6 +2,14 @@
 const express = require("express")
 const router = express.Router()
 
+// Middleware to require a logged-in session for protected routes
+const redirectLogin = (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+        return res.redirect('/users/login')
+    }
+    next()
+}
+
 // Render the search form for books
 router.get('/search',function(req, res, next){
     res.render("search.ejs")
@@ -36,7 +44,7 @@ router.get('/search-result', function (req, res, next) {
 });
 
 // Show a list of all available books from the database
-router.get('/list', function(req, res, next) {
+router.get('/list', redirectLogin, function(req, res, next) {
     let sqlquery = "SELECT * FROM books"; // query database to get all the books
     // execute sql query using the global db pool
     db.query(sqlquery, (err, result) => {
