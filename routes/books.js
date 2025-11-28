@@ -1,6 +1,7 @@
 // Book routes module: handles book searching, listing and adding
 const express = require("express")
 const router = express.Router()
+const { check, validationResult } = require('express-validator');
 
 // Middleware to require a logged-in session for protected routes
 const redirectLogin = (req, res, next) => {
@@ -20,7 +21,8 @@ router.get('/search',function(req, res, next){
 // Advanced behaviour: if `advanced=1` is provided in the query string,
 //                  perform a partial match using SQL LIKE.
 router.get('/search-result', function (req, res, next) {
-    const term = req.query.search_text;
+    // sanitize query input to reduce XSS risk
+    const term = req.sanitize ? req.sanitize(req.query.search_text || '') : (req.query.search_text || '');
     if (!term) {
         // No search term provided - render an empty results page
         return res.render('search_result.ejs', { availableBooks: [], term: '' })
@@ -72,11 +74,24 @@ router.get('/addbook', function(req, res, next) {
 });
 
 // Handle form submission - save book and show confirmation
-router.post('/bookadded', function (req, res, next) {
+router.post('/bookadded', [
+    check('name').isLength({ min: 1, max: 100 }).withMessage('Name required (1-100 chars)'),
+    check('price').isFloat({ gt: 0 }).withMessage('Price must be a positive number')
+], function (req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        // For simplicity re-render the form; real app should show errors
+        return res.render('addbook.ejs')
+    }
+
+    // sanitize inputs
+    const name = req.sanitize ? req.sanitize(req.body.name) : req.body.name
+    const price = parseFloat(req.body.price)
+
     // Prepare SQL to insert the new book record
     let sqlquery = "INSERT INTO books (name, price) VALUES (?,?)"
     // Parameters come from the submitted form
-    let newrecord = [req.body.name, req.body.price]
+    let newrecord = [name, price]
     // Execute SQL using the global db pool
     db.query(sqlquery, newrecord, (err, result) => {
         if (err) {
@@ -85,7 +100,7 @@ router.post('/bookadded', function (req, res, next) {
         }
         else
             // render a confirmation page showing the saved values
-            res.render('bookadded.ejs', {name: req.body.name, price: req.body.price})
+            res.render('bookadded.ejs', {name: name, price: price})
     })
 })
 

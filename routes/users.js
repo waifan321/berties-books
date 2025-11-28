@@ -23,11 +23,21 @@ router.get('/register', function (req, res, next) {
 // Handle registration form submission
 // (Currently this example just returns a confirmation message rather than
 // inserting into a database.)
-router.post('/registered', [check('email').isEmail(), check('username').isLength({ min: 5, max: 20})], function (req, res, next) {
+router.post('/registered', [
+    check('email').isEmail(),
+    check('username').isLength({ min: 5, max: 20}),
+    check('password').isLength({ min: 8 })
+  ], function (req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        res.render('./register')
+        return res.render('register.ejs')
     } else {
+
+    // Sanitize text inputs to reduce XSS risk
+    req.body.first = req.sanitize ? req.sanitize(req.body.first) : req.body.first
+    req.body.last = req.sanitize ? req.sanitize(req.body.last) : req.body.last
+    req.body.username = req.sanitize ? req.sanitize(req.body.username) : req.body.username
+    req.body.email = req.sanitize ? req.sanitize(req.body.email) : req.body.email
 
     const plainPassword = req.body.password
 
@@ -65,7 +75,8 @@ router.get('/login', function(req, res, next) {
 
 // Handle login form submission: compare supplied password with stored hash
 router.post('/loggedin', function(req, res, next) {
-  const username = req.body.username
+  // sanitize username from input to avoid injection/XSS in logs
+  const username = req.sanitize ? req.sanitize(req.body.username) : req.body.username
 
   // Fetch the stored hashed password for this username
   const sql = 'SELECT hashedPassword, first_name, last_name, email FROM users WHERE username = ?'
@@ -76,7 +87,7 @@ router.post('/loggedin', function(req, res, next) {
         // No such user -> record failed login and respond
         const audSql = 'INSERT INTO audit (username, success, ip_address, message) VALUES (?,?,?,?)'
         const audParams = [username || null, 0, req.ip, 'unknown username']
-        db.query(audSql, audParams, (aErr) => {
+        return db.query(audSql, audParams, (aErr) => {
           if (aErr) return next(aErr)
           return res.send('Login failed: unknown username or password.')
         })

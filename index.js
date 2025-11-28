@@ -5,6 +5,7 @@ var ejs = require('ejs')
 var mysql = require('mysql2');
 const path = require('path')
 var session = require ('express-session')
+const expressSanitizer = require('express-sanitizer')
 // Load environment variables from .env (if present)
 require('dotenv').config()
 
@@ -41,6 +42,9 @@ app.use(session({
 
 // Parse URL-encoded request bodies (forms)
 app.use(express.urlencoded({ extended: true }))
+
+// Create an input sanitizer (protects against basic XSS in text fields)
+app.use(expressSanitizer())
 
 // Serve static assets from the `public` folder (CSS, client JS, images)
 app.use(express.static(path.join(__dirname, 'public')))

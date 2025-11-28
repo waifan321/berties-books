@@ -81,6 +81,31 @@ The application records login attempts (successful and failed) in an `audit` tab
 
 To create the table and user, run the SQL in `create_db.sql` on your MySQL server (or import the file using your client).
 
+## Validation & Sanitization
+
+This project now includes server-side validation and input sanitization to reduce malformed input and XSS risks.
+
+- **Registration (`/users/register`)**: `express-validator` checks are applied to ensure:
+	- `email` is a valid email address (`isEmail()`),
+	- `username` length is between 5 and 20 characters (`isLength()`),
+	- `password` length is at least 8 characters (`isLength({ min: 8 })`).
+	- The register handler also sanitizes `first`, `last`, `username`, and `email` using `express-sanitizer` before storing.
+
+- **Login (`/users/loggedin`)**: the supplied `username` is sanitized before use in audit logging / DB queries.
+
+- **Add book (`/books/addbook` → POST `/books/bookadded`)**:
+	- `name` is required and limited to 100 characters,
+	- `price` must be a positive number (`isFloat({ gt: 0 })`).
+	- The book name is sanitized before insertion.
+
+- **Search (`/books/search`)**: the search term is sanitized before use.
+
+Notes:
+- Validation failures currently re-render the form without descriptive errors; you can extend the templates to show `validationResult(req).array()` to provide user feedback.
+- EJS escapes output by default when rendering with `<%= %>`. Avoid using unescaped output (`<%- %>`) for user-supplied data unless intentionally inserting safe HTML.
+
+If you want, I can update the forms to display validation messages and show examples of the sanitized output.
+
 ## Notes and tips
 
 - The app uses a global `db` pool (defined in `index.js`) that route modules access as `db`.
